@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WarShop - Ana Sayfa</title>
+    <!-- Tarayıcı Sekme İkonu (Favicon) -->
     <link rel="icon" type="image/png" href="logo.jfif">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,8 +16,9 @@
     <nav class="bg-gray-800 border-b border-gray-700 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo / Brand -->
-                <div class="flex items-center">
+                <!-- Logo ve Marka -->
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="WarShop Logo" class="h-9 w-9 object-contain rounded-lg border border-gray-700 bg-gray-900" onerror="this.style.display='none'">
                     <span class="text-2xl font-black tracking-wider text-amber-400">warshop</span>
                 </div>
                 <!-- Navbar Right -->
@@ -77,7 +79,7 @@
                 <p class="text-gray-300 text-sm mb-4">Lütfen geçerli hediye kodunuzu aşağıya girin:</p>
                 <div class="mb-4">
                     <input type="text" id="codeInput" placeholder="Örn: WAR2026" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 uppercase tracking-wider font-mono">
-                    <p id="errorMsg" class="text-red-400 text-xs mt-2 hidden">Geçersiz veya sisteme kayıtlı olmayan bir kod girdiniz!</p>
+                    <p id="errorMsg" class="text-red-400 text-xs mt-2 hidden">Geçersiz, hakkı kalmamış veya sisteme kayıtlı olmayan bir kod girdiniz!</p>
                 </div>
                 <button onclick="verifyCode()" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-3 rounded-xl transition shadow-md">
                     Kodu Sorgula
@@ -123,7 +125,24 @@
     </div>
 
     <script>
+        // HERKESTE GEÇERLİ OLAN ORTAK KODLAR LİSTESİ (Buradan kod ekleyip/çıkarabilirsiniz)
+        const defaultCodes = [
+            { code: "WAR2026", limit: 5, options: "100 VP, 300 VP, 500 VP", desc: "Özel açılış hediyesi!" },
+            { code: "HEDIYE10", limit: 1, options: "50 Robux, 100 Robux", desc: "Haftalık bonus kodunuz." }
+        ];
+
         let currentValidCodeData = null;
+        let currentValidCodeIndex = -1;
+
+        // Sayfa açıldığında ortak kodlar localStorage'da yoksa veya sıfırlamak istersek yükle
+        function getSharedCodes() {
+            let stored = localStorage.getItem('warshop_shared_codes');
+            if (!stored) {
+                localStorage.setItem('warshop_shared_codes', JSON.stringify(defaultCodes));
+                return defaultCodes;
+            }
+            return JSON.parse(stored);
+        }
 
         function openCodeModal() {
             document.getElementById('codeModal').classList.remove('hidden');
@@ -133,6 +152,8 @@
             document.getElementById('step1Container').classList.remove('hidden');
             document.getElementById('step2Container').classList.add('hidden');
             document.getElementById('step3Container').classList.add('hidden');
+            currentValidCodeData = null;
+            currentValidCodeIndex = -1;
         }
 
         function closeCodeModal() {
@@ -144,35 +165,30 @@
             const inputVal = document.getElementById('codeInput').value.trim();
             const errorMsg = document.getElementById('errorMsg');
             
-            // localStorage'dan kayıtlı kodları al
-            const savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
-            
-            // Eşleşen kodu bul
-            const found = savedCodes.find(item => item.code.toUpperCase() === inputVal.toUpperCase());
+            const savedCodes = getSharedCodes();
+            const foundIndex = savedCodes.findIndex(item => item.code.toUpperCase() === inputVal.toUpperCase());
 
-            if (!found) {
+            if (foundIndex === -1 || savedCodes[foundIndex].limit <= 0) {
                 errorMsg.classList.remove('hidden');
                 return;
             }
 
             errorMsg.classList.add('hidden');
-            currentValidCodeData = found;
+            currentValidCodeData = savedCodes[foundIndex];
+            currentValidCodeIndex = foundIndex;
 
-            // Adım 2 hazırlığı
             document.getElementById('step1Container').classList.add('hidden');
             document.getElementById('step2Container').classList.remove('hidden');
 
-            // Açıklama göster
-            document.getElementById('descOutput').innerText = found.desc || "Özel bir açıklama girilmemiş.";
+            document.getElementById('descOutput').innerText = currentValidCodeData.desc || "Özel bir açıklama girilmemiş.";
 
-            // Seçenekler varsa göster
             const optionsSection = document.getElementById('optionsSection');
             const optionsList = document.getElementById('optionsList');
             optionsList.innerHTML = '';
 
-            if (found.options && found.options.trim() !== '') {
+            if (currentValidCodeData.options && currentValidCodeData.options.trim() !== '') {
                 optionsSection.classList.remove('hidden');
-                const opts = found.options.split(',').map(o => o.trim()).filter(o => o);
+                const opts = currentValidCodeData.options.split(',').map(o => o.trim()).filter(o => o);
                 opts.forEach((opt, index) => {
                     optionsList.innerHTML += `
                         <label class="flex items-center space-x-3 bg-gray-900 p-3 rounded-xl border border-gray-700 cursor-pointer hover:border-amber-500/50 transition">
@@ -187,6 +203,22 @@
         }
 
         function proceedCode() {
+            if (currentValidCodeIndex > -1) {
+                let savedCodes = getSharedCodes();
+                
+                if (savedCodes[currentValidCodeIndex]) {
+                    // Hakkı 1 azalt
+                    savedCodes[currentValidCodeIndex].limit -= 1;
+
+                    // Hak bittiyse tamamen listeden çıkar
+                    if (savedCodes[currentValidCodeIndex].limit <= 0) {
+                        savedCodes.splice(currentValidCodeIndex, 1);
+                    }
+
+                    localStorage.setItem('warshop_shared_codes', JSON.stringify(savedCodes));
+                }
+            }
+
             document.getElementById('step2Container').classList.add('hidden');
             document.getElementById('step3Container').classList.remove('hidden');
             
