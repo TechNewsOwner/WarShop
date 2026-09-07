@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WarShop - Admin Paneli</title>
+    <link rel="icon" type="image/png" href="logo.jfif">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-gray-100 flex flex-col min-h-screen">
+
+    <!-- NAVBAR -->
+    <nav class="bg-gray-800 border-b border-gray-700 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-black tracking-wider text-amber-400">warshop <span class="text-xs text-gray-400 font-normal">/ Admin Panel</span></span>
+                </div>
+                <div>
+                    <a href="index.html" class="text-gray-300 hover:text-white text-sm font-medium transition flex items-center space-x-2">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Siteye Dön</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN WRAPPER -->
+    <main class="flex-grow flex items-center justify-center px-4 py-12">
+
+        <!-- GİRİŞ EKRANI -->
+        <div id="loginCard" class="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
+            <div class="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 class="text-2xl font-extrabold text-white text-center mb-2">Admin Girişi</h2>
+            <p class="text-gray-400 text-center text-sm mb-6">Yönetim paneline erişmek için şifrenizi girin.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Admin Şifresi</label>
+                    <input type="password" id="adminPasswordInput" placeholder="Şifrenizi girin" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-mono">
+                    <p id="loginError" class="text-red-400 text-xs mt-2 hidden">Hatalı şifre! Lütfen tekrar deneyin.</p>
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold py-3 rounded-xl transition shadow-md">
+                    Giriş Yap
+                </button>
+            </div>
+        </div>
+
+        <!-- YÖNETİM PANELİ EKRANI -->
+        <div id="adminPanelCard" class="max-w-4xl w-full bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-gray-700 gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white">Kod Yönetim Paneli</h2>
+                    <p class="text-gray-400 text-sm">Sitede geçerli olacak kodları ekleyin, seçenekler belirleyin ve düzenleyin.</p>
+                </div>
+                <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center space-x-2 w-fit">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Çıkış Yap</span>
+                </button>
+            </div>
+
+            <!-- Kod Ekleme Formu -->
+            <div class="bg-gray-900 p-6 rounded-xl border border-gray-700 mb-8">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                    <i class="fa-solid fa-plus text-amber-400"></i>
+                    <span>Yeni Kod Ekle</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Kod Adı</label>
+                        <input type="text" id="newCode" placeholder="Örn: YAZ2026" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Hediye Seçenekleri (Virgülle Ayırın)</label>
+                        <input type="text" id="newOptions" placeholder="Örn: 100 VP, 300 VP, 500 VP" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Açıklama / Mesaj</label>
+                    <textarea id="newDesc" rows="2" placeholder="Devam et butonuna basınca gösterilecek açıklama..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+                <button onclick="addNewCode()" class="bg-amber-500 hover:bg-amber-600 text-gray-950 font-bold px-6 py-2.5 rounded-xl transition shadow-md w-full sm:w-auto">
+                    Kodu Kaydet
+                </button>
+            </div>
+
+            <!-- Kayıtlı Kodlar Listesi -->
+            <div>
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                    <i class="fa-solid fa-list text-amber-400"><span>Aktif Kodlar</span></i>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-700 text-xs text-gray-400 uppercase">
+                                <th class="py-3 px-4">Kod</th>
+                                <th class="py-3 px-4">Seçenekler</th>
+                                <th class="py-3 px-4">Açıklama</th>
+                                <th class="py-3 px-4 text-right">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="codesTableBody" class="divide-y divide-gray-700/50 text-sm">
+                            <!-- Dinamik satırlar gelecek -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-800 border-t border-gray-700 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between text-sm text-gray-400">
+            <p>&copy; 2026 warshop. Tüm hakları saklıdır.</p>
+            <div class="mt-4 sm:mt-0 flex items-center space-x-6">
+                <a href="index.html" class="hover:text-amber-400 transition">Ana Sayfa</a>
+                <a href="admin.html" class="flex items-center space-x-1.5 text-amber-400 hover:text-amber-300 font-medium transition">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                    <span>Admin Paneli</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const ADMIN_PASS = "War123";
+
+        // Sayfa açıldığında daha önce oturum açıldı mı kontrol et
+        window.onload = function() {
+            if (localStorage.getItem('warshop_logged_in') === 'true') {
+                showAdminPanel();
+            }
+        }
+
+        function handleLogin() {
+            const passInput = document.getElementById('adminPasswordInput').value;
+            const errorEl = document.getElementById('loginError');
+
+            if (passInput === ADMIN_PASS) {
+                localStorage.setItem('warshop_logged_in', 'true');
+                errorEl.classList.add('hidden');
+                showAdminPanel();
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('warshop_logged_in');
+            document.getElementById('adminPanelCard').classList.add('hidden');
+            document.getElementById('loginCard').classList.remove('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginCard').classList.add('hidden');
+            document.getElementById('adminPanelCard').classList.remove('hidden');
+            renderCodesTable();
+        }
+
+        function addNewCode() {
+            const codeVal = document.getElementById('newCode').value.trim();
+            const optionsVal = document.getElementById('newOptions').value.trim();
+            const descVal = document.getElementById('newDesc').value.trim();
+
+            if (!codeVal) {
+                alert('Lütfen geçerli bir kod adı girin!');
+                return;
+            }
+
+            let savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
+
+            // Aynı kod varsa güncelle veya ekle
+            savedCodes.push({
+                code: codeVal,
+                options: optionsVal,
+                desc: descVal
+            });
+
+            localStorage.setItem('warshop_codes', JSON.stringify(savedCodes));
+
+            // Formu temizle
+            document.getElementById('newCode').value = '';
+            document.getElementById('newOptions').value = '';
+            document.getElementById('newDesc').value = '';
+
+            renderCodesTable();
+        }
+
+        function deleteCode(index) {
+            let savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
+            savedCodes.splice(index, 1);
+            localStorage.setItem('warshop_codes', JSON.stringify(savedCodes));
+            renderCodesTable();
+        }
+
+        function renderCodesTable() {
+            const tbody = document.getElementById('codesTableBody');
+            tbody.innerHTML = '';
+
+            const savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
+
+            if (savedCodes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 px-4 text-center text-gray-500">Henüz eklenmiş bir kod bulunmuyor.</td></tr>`;
+                return;
+            }
+
+            savedCodes.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-800/50 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-amber-400">${item.code}</td>
+                        <td class="py-3 px-4 text-gray-300">${item.options || '-'}</td>
+                        <td class="py-3 px-4 text-gray-300">${item.desc || '-'}</td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="deleteCode(${index})" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-lg transition" title="Sil">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
