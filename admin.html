@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WarShop - Admin Paneli</title>
+    <!-- Tarayıcı Sekme İkonu (Favicon) -->
     <link rel="icon" type="image/png" href="logo.jfif">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +16,8 @@
     <nav class="bg-gray-800 border-b border-gray-700 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.png" alt="WarShop Logo" class="h-9 w-9 object-contain rounded-lg border border-gray-700 bg-gray-900" onerror="this.style.display='none'">
                     <span class="text-2xl font-black tracking-wider text-amber-400">warshop <span class="text-xs text-gray-400 font-normal">/ Admin Panel</span></span>
                 </div>
                 <div>
@@ -56,7 +58,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-6 border-b border-gray-700 gap-4">
                 <div>
                     <h2 class="text-2xl font-extrabold text-white">Kod Yönetim Paneli</h2>
-                    <p class="text-gray-400 text-sm">Sitede geçerli olacak kodları ekleyin, seçenekler belirleyin ve düzenleyin.</p>
+                    <p class="text-gray-400 text-sm">Aktif kodları ve kalan haklarını görüntüleyin.</p>
                 </div>
                 <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center space-x-2 w-fit">
                     <i class="fa-solid fa-right-from-bracket"></i>
@@ -70,14 +72,18 @@
                     <i class="fa-solid fa-plus text-amber-400"></i>
                     <span>Yeni Kod Ekle</span>
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                         <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Kod Adı</label>
                         <input type="text" id="newCode" placeholder="Örn: YAZ2026" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:outline-none focus:border-amber-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Hediye Seçenekleri (Virgülle Ayırın)</label>
-                        <input type="text" id="newOptions" placeholder="Örn: 100 VP, 300 VP, 500 VP" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500">
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Kullanım Hakkı (Adet)</label>
+                        <input type="number" id="newLimit" value="1" min="1" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Hediye Seçenekleri (Virgülle)</label>
+                        <input type="text" id="newOptions" placeholder="Örn: 100 VP, 300 VP" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
                 <div class="mb-4">
@@ -92,13 +98,15 @@
             <!-- Kayıtlı Kodlar Listesi -->
             <div>
                 <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-                    <i class="fa-solid fa-list text-amber-400"><span>Aktif Kodlar</span></i>
+                    <i class="fa-solid fa-list text-amber-400"></i>
+                    <span>Aktif Kodlar ve Kalan Haklar</span>
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-gray-700 text-xs text-gray-400 uppercase">
                                 <th class="py-3 px-4">Kod</th>
+                                <th class="py-3 px-4">Kalan Hak</th>
                                 <th class="py-3 px-4">Seçenekler</th>
                                 <th class="py-3 px-4">Açıklama</th>
                                 <th class="py-3 px-4 text-right">İşlem</th>
@@ -130,8 +138,20 @@
 
     <script>
         const ADMIN_PASS = "War123";
+        const defaultCodes = [
+            { code: "WAR2026", limit: 5, options: "100 VP, 300 VP, 500 VP", desc: "Özel açılış hediyesi!" },
+            { code: "HEDIYE10", limit: 1, options: "50 Robux, 100 Robux", desc: "Haftalık bonus kodunuz." }
+        ];
 
-        // Sayfa açıldığında daha önce oturum açıldı mı kontrol et
+        function getSharedCodes() {
+            let stored = localStorage.getItem('warshop_shared_codes');
+            if (!stored) {
+                localStorage.setItem('warshop_shared_codes', JSON.stringify(defaultCodes));
+                return defaultCodes;
+            }
+            return JSON.parse(stored);
+        }
+
         window.onload = function() {
             if (localStorage.getItem('warshop_logged_in') === 'true') {
                 showAdminPanel();
@@ -166,6 +186,7 @@
 
         function addNewCode() {
             const codeVal = document.getElementById('newCode').value.trim();
+            const limitVal = parseInt(document.getElementById('newLimit').value) || 1;
             const optionsVal = document.getElementById('newOptions').value.trim();
             const descVal = document.getElementById('newDesc').value.trim();
 
@@ -174,19 +195,19 @@
                 return;
             }
 
-            let savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
+            let savedCodes = getSharedCodes();
 
-            // Aynı kod varsa güncelle veya ekle
             savedCodes.push({
                 code: codeVal,
+                limit: limitVal,
                 options: optionsVal,
                 desc: descVal
             });
 
-            localStorage.setItem('warshop_codes', JSON.stringify(savedCodes));
+            localStorage.setItem('warshop_shared_codes', JSON.stringify(savedCodes));
 
-            // Formu temizle
             document.getElementById('newCode').value = '';
+            document.getElementById('newLimit').value = '1';
             document.getElementById('newOptions').value = '';
             document.getElementById('newDesc').value = '';
 
@@ -194,9 +215,9 @@
         }
 
         function deleteCode(index) {
-            let savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
+            let savedCodes = getSharedCodes();
             savedCodes.splice(index, 1);
-            localStorage.setItem('warshop_codes', JSON.stringify(savedCodes));
+            localStorage.setItem('warshop_shared_codes', JSON.stringify(savedCodes));
             renderCodesTable();
         }
 
@@ -204,10 +225,10 @@
             const tbody = document.getElementById('codesTableBody');
             tbody.innerHTML = '';
 
-            const savedCodes = JSON.parse(localStorage.getItem('warshop_codes')) || [];
+            const savedCodes = getSharedCodes();
 
             if (savedCodes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-4 px-4 text-center text-gray-500">Henüz eklenmiş bir kod bulunmuyor.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 px-4 text-center text-gray-500">Henüz eklenmiş aktif bir kod bulunmuyor.</td></tr>`;
                 return;
             }
 
@@ -215,6 +236,7 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-800/50 transition">
                         <td class="py-3 px-4 font-mono font-bold text-amber-400">${item.code}</td>
+                        <td class="py-3 px-4 text-amber-300 font-bold">${item.limit} Hak</td>
                         <td class="py-3 px-4 text-gray-300">${item.options || '-'}</td>
                         <td class="py-3 px-4 text-gray-300">${item.desc || '-'}</td>
                         <td class="py-3 px-4 text-right">
